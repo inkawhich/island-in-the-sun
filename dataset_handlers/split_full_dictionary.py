@@ -8,12 +8,12 @@ import random
 import os
 
 # Directory where images are
-input_dict = "/Users/nathaninkawhich/Documents/ECE590_Intro_ML/island-in-the-sun/caffe2/full_dictionary.txt"
-output_train_dict = "/Users/nathaninkawhich/Documents/ECE590_Intro_ML/island-in-the-sun/caffe2/train_dictionary.txt"
-output_test_dict = "/Users/nathaninkawhich/Documents/ECE590_Intro_ML/island-in-the-sun/caffe2/test_dictionary.txt"
+input_dict = os.path.abspath("../../dataset/full_dictionary.txt")
+output_train_dict = os.path.abspath("../../dataset/train_dictionary.txt")
+output_test_dict = os.path.abspath("../../dataset/test_dictionary.txt")
 
 # percentage of the file from the full dictionary that will go to train dictionary
-percent_train = .8
+percent_train = .9
 
 # Read in all the lines from the full dictionary
 lines = open(input_dict).readlines()
