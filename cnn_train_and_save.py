@@ -1,4 +1,18 @@
+##################################################################################
 # NAI
+#
+# This is the core script in this directory. It is where we will build the models and train
+#   them from scratch. This is where we will try changing network architectures, changing
+#   and augmenting training data, etc. The accuracy and loss reported in this script are
+#   as measured on the training set so BEWARE of overfitting!
+#
+# There are 5 main parts to this script:
+#   1. Preprocessing/augmenting training data (cropping, fliping, etc.)
+#   2. Build the model and specify its architecture
+#   3. Specify the SGD algorithm
+#   4. Run the training
+#   5. Save the trained model so we can test later
+##################################################################################
 
 # import dependencies
 print "Import Dependencies..."
@@ -16,28 +30,18 @@ from skimage.color import rgb2gray
 
 
 ##################################################################################
-# MAIN
-
-print "Entering Main..."
-
-##################################################################################
 # Gather Inputs
 train_dictionary = "../dataset/train_dictionary.txt"
 predict_net_out = "cnn_predict_net.pb"
 init_net_out = "cnn_init_net.pb"
 batch_size = 50
-num_epochs = 30
+num_epochs = 30 # Number of times training will cycle through the entire train set
 
 
-
-
-
-
-
-
-
-
-
+##################################################################################
+# Formatting Data stuff
+# Here is where we will do our data manipulations to try to reduce overfitting including
+#   horizontal flipping, convert to grayscale, mean subtract, gaussian blur, etc, etc, etc
 
 def crop_center(img, cropx, cropy):
     y, x, c = img.shape
@@ -147,47 +151,6 @@ train_model = model_helper.ModelHelper(name="train_model", arg_scope=arg_scope)
 # This can be used for calculating OFM size of conv and pooling layers
 # O = ( (W-K+2P) / S ) + 1
 
-def Add_Original_CIFAR10_Model(model, data):
-    # data size = 3x90x90
-    conv1 = brew.conv(model, data, 'conv1', dim_in=3, dim_out=32, kernel=5, stride=1, pad=2)
-    pool1 = brew.max_pool(model, conv1, 'pool1', kernel=3, stride=2)
-    relu1 = brew.relu(model, pool1, 'relu1')
-    # data size = 32x45x45
-    conv2 = brew.conv(model, relu1, 'conv2', dim_in=32, dim_out=32, kernel=5, stride=1, pad=2)
-    relu2 = brew.relu(model, conv2, 'relu2')
-    pool2 = brew.average_pool(model, relu2, 'pool2', kernel=3, stride=2)
-    # data size = 32x22x22
-    conv3 = brew.conv(model, pool2, 'conv3', dim_in=32, dim_out=64, kernel=5, stride=1, pad=2)
-    relu3 = brew.relu(model, conv3, 'relu3')
-    pool3 = brew.average_pool(model, relu3, 'pool3', kernel=3, stride=2)
-    # data size = 64x11x11
-    fc1 = brew.fc(model, pool3, 'fc1', dim_in=64*10*10, dim_out=64)
-    fc2 = brew.fc(model, fc1, 'fc2', dim_in=64, dim_out=2)
-    softmax = brew.softmax(model,fc2, 'softmax')
-
-def Add_Custom1_Model(model, data):
-    # data size = 64x101x101
-    conv1 = brew.conv(model, data, 'conv1', dim_in=3, dim_out=64, kernel=5, stride=1, pad=2)
-    pool1 = brew.max_pool(model, conv1, 'pool1', kernel=3, stride=2)
-    relu1 = brew.relu(model, pool1, 'relu1')
-    # data size = 64x50x50
-    conv2 = brew.conv(model, relu1, 'conv2', dim_in=64, dim_out=64, kernel=5, stride=1, pad=2)
-    pool2 = brew.max_pool(model, conv2, 'pool2', kernel=3, stride=2)
-    relu2 = brew.relu(model, pool2, 'relu2')
-    # data size = 64x25x25
-    conv3 = brew.conv(model, relu2, 'conv3', dim_in=64, dim_out=128, kernel=5, stride=1, pad=2)
-    pool3 = brew.max_pool(model, conv3, 'pool3', kernel=3, stride=2)
-    relu3 = brew.relu(model, pool3, 'relu3')
-    # data size = 128x11x11
-    conv4 = brew.conv(model, relu3, 'conv4', dim_in=128, dim_out=128, kernel=5, stride=1, pad=2)
-    pool4 = brew.max_pool(model, conv4, 'pool4', kernel=3, stride=2)
-    relu4 = brew.relu(model, pool4, 'relu4')
-    # data size = 128x5x5
-    #fc1 = brew.fc(model, pool4, 'fc1', dim_in=128*5*5, dim_out=128)
-    fc1 = brew.fc(model, relu4, 'fc1', dim_in=128*4*4, dim_out=128)
-    fc2 = brew.fc(model, fc1, 'fc2', dim_in=128, dim_out=2)
-    softmax = brew.softmax(model,fc2, 'softmax')
-
 def AddLeNetModel(model, data):
     # Size = 3x90x90
     conv1 = brew.conv(model, data, 'conv1', dim_in=1, dim_out=20, kernel=5)
@@ -221,8 +184,6 @@ def AddLeNetModel(model, data):
 ##################################################################################
 ##################################################################################
 
-#softmax=Add_Original_CIFAR10_Model(train_model, 'data')
-#softmax=Add_Custom1_Model(train_model, 'data')
 softmax=AddLeNetModel(train_model, 'data')
 
 ##################################################################################
@@ -240,6 +201,7 @@ loss = train_model.AveragedLoss(xent, 'loss')
 brew.accuracy(train_model, ['softmax', 'label'], 'accuracy')
 train_model.AddGradientOperators([loss])
 
+# Set up SGD algorithm
 optimizer.build_sgd(train_model,base_learning_rate=0.01, policy="step", stepsize=10000, gamma=0.1, momentum=0.9)
 
 ##################################################################################
@@ -259,12 +221,8 @@ for image, label in train_dataset.read(batch_size=1):
 workspace.RunNetOnce(train_model.param_init_net)
 # create the network
 workspace.CreateNet(train_model.net, overwrite=True)
-# Set the total number of iterations and track the accuracy and loss
 
-
-
-
-# Set the total number of iterations and track the accuracy and loss
+# Track the accuracy and loss
 accuracy = []
 loss = []
 
@@ -273,7 +231,6 @@ for epoch in range(num_epochs):
 
     for index, (image, label) in enumerate(train_dataset.read(batch_size)):
 
-        # image.shape = [bsize, 20, 100, 100]
         workspace.FeedBlob("data", image)
         workspace.FeedBlob("label", label)
         workspace.RunNet(train_model.net) 
@@ -310,6 +267,8 @@ print "Done, exiting..."
 pyplot.plot(loss,'b', label='loss')
 pyplot.plot(accuracy,'r', label='accuracy')
 pyplot.legend(loc='upper right')
+pyplot.title("Accuracy and Loss over training run")
+pyplot.xlabel("iteration")
 pyplot.show()
 
 

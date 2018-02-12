@@ -1,4 +1,11 @@
+##################################################################################
 # NAI
+#
+# This script is what we will use for testing our trained model based on a labeled
+#   test dictionary. This does not format a csv for submission but can be used to
+#   quickly see how the model we just trained does on our test set. Note, the test
+#   dictionary is labeled, so this will output a % ACCURACY
+##################################################################################
 
 # import dependencies
 print "Import Dependencies..."
@@ -15,12 +22,6 @@ import random
 import skimage.io
 from skimage.color import rgb2gray
 
-
-##################################################################################
-# MAIN
-
-print "Entering Main..."
-
 ##################################################################################
 # Gather Inputs
 test_dictionary = "../dataset/test_dictionary.txt"
@@ -28,11 +29,10 @@ predict_net = "cnn_predict_net.pb"
 init_net = "cnn_init_net.pb"
 
 
-
-
-
 ##################################################################################
 # Image formatting functions
+# We do not need all of the augmentation like we do in training but we may want
+#   to play with the data before feeding it to classifier
 def crop_center(img, cropx, cropy):
     y, x, c = img.shape
     startx = x // 2 - (cropx // 2)
@@ -117,7 +117,7 @@ for line in test_dict:
 
     total += 1
     
-
+print "\n**************************************"
 print "Accuracy = {}".format(num_correct/float(total))
 
 
