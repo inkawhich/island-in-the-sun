@@ -12,6 +12,7 @@
 #   3. Specify the SGD algorithm
 #   4. Run the training
 #   5. Save the trained model so we can test later
+#
 ##################################################################################
 
 # import dependencies
@@ -35,7 +36,7 @@ train_dictionary = "../dataset/train_dictionary.txt"
 predict_net_out = "cnn_predict_net.pb"
 init_net_out = "cnn_init_net.pb"
 batch_size = 50
-num_epochs = 30 # Number of times training will cycle through the entire train set
+num_epochs = 35 # Number of times training will cycle through the entire train set
 
 
 ##################################################################################
@@ -48,45 +49,42 @@ def crop_center(img, cropx, cropy):
     startx = x // 2 - (cropx // 2)
     starty = y // 2 - (cropy // 2)
     return img[starty:starty+cropy, startx:startx+cropx]
-
+  
 def prepare_image(img_path):
     
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
     #img = rescale(img, 227, 227)
-    img = crop_center(img, 90, 90)
-    #img = img.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
-    #img = img[(2, 1, 0), :, :]                 # RGB to BGR color order
-    #img = img * 255 - 128                      # Subtract mean = 128
+    #img = crop_center(img, 90, 90)
 
+    # Create horizontal flip
+    img2 = np.copy(img)
+    img2 = np.fliplr(img2)
+
+    # Create rotate 90
+    img3 = np.copy(img)
+    img3 = np.rot90(img3)
+
+    img = img.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
+    img = img[(2, 1, 0), :, :]                 # RGB to BGR color order
+    img = img * 255 - 128                      # Subtract mean = 128
+    img /= 255.
     #pyplot.imshow(img)
     #pyplot.show()
 
-    img = rgb2gray(img)
-
-    # Create a new one to horizontal flip
-    img2 = np.copy(img)
-    img2 = np.expand_dims(img2, axis=2)          # expand dims for greyscale images
-    img2 = np.fliplr(img2)
-    img2 = img2.swapaxes(1, 2).swapaxes(0, 1)
-
-
-    #  Create a new one to vertical flip
-    img3 = np.copy(img)
-    img3 = np.expand_dims(img3, axis=2)          # expand dims for greyscale images
-    img3 = np.flipud(img3)
-    img3 = img3.swapaxes(1, 2).swapaxes(0, 1)
-
-
-    #pyplot.imshow(img, cmap='gray')
-    #pyplot.show()
-    img = np.expand_dims(img, axis=2)          # expand dims for greyscale images
-    img = img.swapaxes(1, 2).swapaxes(0, 1)
-
-    #exit()
-    #return img.astype(np.float32)
-    return img.astype(np.float32),img2.astype(np.float32),img3.astype(np.float32)
+    # Create horizontal flip
+    img2 = img2.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
+    img2 = img2[(2, 1, 0), :, :]                 # RGB to BGR color order
+    img2 = img2 * 255 - 128                      # Subtract mean = 128
+    img2 /= 255.
     
+    # Rot90
+    img3 = img3.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
+    img3 = img3[(2, 1, 0), :, :]                 # RGB to BGR color order
+    img3 = img3 * 255 - 128                      # Subtract mean = 128
+    img3 /= 255.
+
+    return img.astype(np.float32),img2.astype(np.float32),img3.astype(np.float32)
 
 
 def make_batch(iterable, batch_size=1):
@@ -153,7 +151,7 @@ train_model = model_helper.ModelHelper(name="train_model", arg_scope=arg_scope)
 
 def AddLeNetModel(model, data):
     # Size = 3x90x90
-    conv1 = brew.conv(model, data, 'conv1', dim_in=1, dim_out=20, kernel=5)
+    conv1 = brew.conv(model, data, 'conv1', dim_in=3, dim_out=20, kernel=5)
     pool1 = brew.max_pool(model, conv1, 'pool1',kernel=2,stride=2)
     relu1 = brew.relu(model, pool1, 'relu1')
     # Size = 20x45x45
@@ -169,7 +167,7 @@ def AddLeNetModel(model, data):
 
     # Size = 50x22x22
     #fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*19*19, dim_out=500)
-    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*7*7, dim_out=500)
+    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*9*9, dim_out=500)
     relu4 = brew.relu(model, fc4, 'relu4')
 
     #drop4 = brew.dropout(model,relu4,'drop4',ratio=0.2,is_test=0)

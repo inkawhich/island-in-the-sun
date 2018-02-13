@@ -4,25 +4,31 @@ import os
 import glob
 import numpy as np
 
-# Label file for training data
-training_labels_file = os.path.abspath("../../dataset/labels_training.csv")
+
+# CSV Label file [of format (id,score)]
+labels_file = os.path.abspath("../../dataset/labels_training.csv")
 
 # Directory where images are
-training_data_dir = os.path.abspath("../../dataset/training")
+data_dir = os.path.abspath("../../dataset/training")
 
 # Output file name
-training_dict = os.path.abspath("../../dataset/full_dictionary.txt")
+output_dict = os.path.abspath("../../dataset/equalized_training_dictionary.txt")
 
+'''
+labels_file = os.path.abspath("../../dataset/labels_testing.csv")
+data_dir = os.path.abspath("../../dataset/testing")
+output_dict = os.path.abspath("../../dataset/test_dictionary.txt")
+'''
 ###############################################################
 # There is an imbalance in the number of 1's and 0's
 # Set this to one if you want to balance the number
 #   Note: If you set this you will be ignoring some samples
-equalize = 1
+equalize = 0
 ###############################################################
 
 
-f = open(training_labels_file,"rb")
-out = open(training_dict,"w")
+f = open(labels_file,"rb")
+out = open(output_dict,"w")
 
 # Get rid of the header line in the csv file
 f.readline()
@@ -48,7 +54,7 @@ for line in f:
 
     print "fname: '{}' -> label: '{}'".format(dat,label)
     # Form the output string to write to the file
-    out_str = training_data_dir + "/" + dat + ".tif " + label
+    out_str = data_dir + "/" + dat + ".tif " + label
     print out_str
     # Write the string to the file
     out.write(out_str + "\n")

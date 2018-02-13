@@ -23,9 +23,9 @@ print "Entering Main..."
 # Gather Inputs
 train_dictionary = "../dataset/train_dictionary.txt"
 init_net_in = "cnn_init_net.pb"
-init_net_out = "cnn_init_net_40epoch.pb"
+init_net_out = "cnn_init_net_32epoch.pb"
 batch_size = 50
-num_epochs = 18
+num_epochs = 10
 
 
 

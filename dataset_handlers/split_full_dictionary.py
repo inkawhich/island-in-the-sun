@@ -8,12 +8,12 @@ import random
 import os
 
 # Directory where images are
-input_dict = os.path.abspath("../../dataset/full_dictionary.txt")
+input_dict = os.path.abspath("../../dataset/equalized_training_dictionary.txt")
 output_train_dict = os.path.abspath("../../dataset/train_dictionary.txt")
-output_test_dict = os.path.abspath("../../dataset/test_dictionary.txt")
+output_test_dict = os.path.abspath("../../dataset/EMPTY_test_dictionary.txt")
 
 # percentage of the file from the full dictionary that will go to train dictionary
-percent_train = .9
+percent_train = 1
 
 # Read in all the lines from the full dictionary
 lines = open(input_dict).readlines()
@@ -32,4 +32,5 @@ print "total lines written: ", (len(lines[:num_train])+len(lines[num_train:]))
 
 # write the two separate files
 open(output_train_dict, 'w').writelines(lines[:num_train])
-open(output_test_dict, 'w').writelines(lines[num_train:])
+if percent_train < 1:
+    open(output_test_dict, 'w').writelines(lines[num_train:])
