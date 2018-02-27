@@ -16,12 +16,12 @@
 ##################################################################################
 
 # import dependencies
-print "Import Dependencies..."
+#print "Import Dependencies..."
 from matplotlib import pyplot
-import numpy as np 
+import numpy as np
 import os
 import shutil
-import caffe2.python.predictor.predictor_exporter as pe 
+import caffe2.python.predictor.predictor_exporter as pe
 from caffe2.python import core,model_helper,net_drawer,optimizer,workspace,visualize,brew,utils
 from caffe2.proto import caffe2_pb2
 from caffe2.python.predictor import mobile_exporter
@@ -36,7 +36,7 @@ train_dictionary = "../dataset/train_dictionary.txt"
 predict_net_out = "cnn_predict_net.pb"
 init_net_out = "cnn_init_net.pb"
 batch_size = 50
-num_epochs = 10 # Number of times training will cycle through the entire train set
+num_epochs = 40 # Number of times training will cycle through the entire train set
 
 
 ##################################################################################
@@ -49,13 +49,13 @@ def crop_center(img, cropx, cropy):
     startx = x // 2 - (cropx // 2)
     starty = y // 2 - (cropy // 2)
     return img[starty:starty+cropy, startx:startx+cropx]
-  
+
 def prepare_image(img_path):
-    
+
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
     #img = rescale(img, 227, 227)
-    #img = crop_center(img, 90, 90)
+    img = crop_center(img, 90, 90)
 
     # Create horizontal flip
     img2 = np.copy(img)
@@ -77,7 +77,7 @@ def prepare_image(img_path):
     img2 = img2[(2, 1, 0), :, :]                 # RGB to BGR color order
     img2 = img2 * 255 - 128                      # Subtract mean = 128
     img2 /= 255.
-    
+
     # Rot90
     img3 = img3.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
     img3 = img3[(2, 1, 0), :, :]                 # RGB to BGR color order
@@ -96,15 +96,15 @@ class Island_Dataset(object):
     def __init__(self, dictionary_file=train_dictionary):
         self.image_files = [line.split()[0] for line in open(dictionary_file)]
         self.labels = [line.split()[1] for line in open(dictionary_file)]
-        
+
     def __getitem__(self, index):
         image,image2,image3 = prepare_image(self.image_files[index])
         label = self.labels[index]
         return image, image2, image3, label
-    
+
     def __len__(self):
         return len(self.labels)
-    
+
     def read(self, batch_size=50, shuffle=True):
         """Read (image, label) pairs in batch"""
         num = int(len(self)) // batch_size
@@ -167,7 +167,7 @@ def AddLeNetModel(model, data):
 
     # Size = 50x22x22
     #fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*19*19, dim_out=500)
-    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*9*9, dim_out=500)
+    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*7*7, dim_out=500)
     relu4 = brew.relu(model, fc4, 'relu4')
 
     #drop4 = brew.dropout(model,relu4,'drop4',ratio=0.2,is_test=0)
@@ -231,12 +231,12 @@ for epoch in range(num_epochs):
 
         workspace.FeedBlob("data", image)
         workspace.FeedBlob("label", label)
-        workspace.RunNet(train_model.net) 
+        workspace.RunNet(train_model.net)
         curr_acc = workspace.FetchBlob('accuracy')
         curr_loss = workspace.FetchBlob('loss')
         accuracy.append(curr_acc)
         loss.append(curr_loss)
-        print "[{}][{}/{}] loss={}, accuracy={}".format(epoch, index, int(len(train_dataset) / batch_size),curr_loss, curr_acc)
+        print ("[{}][{}/{}] loss={}, accuracy={}".format(epoch, index, int(len(train_dataset) / batch_size),curr_loss, curr_acc))
 
 ##################################################################################
 #### Save the trained model for testing later
@@ -244,7 +244,7 @@ for epoch in range(num_epochs):
 # save as two protobuf files (predict_net.pb and init_net.pb)
 # predict_net.pb defines the architecture of the network
 # init_net.pb defines the network params/weights
-print "Saving the trained model to predict/init.pb files"
+#print "Saving the trained model to predict/init.pb files"
 deploy_model = model_helper.ModelHelper(name="cifar10_deploy", arg_scope=arg_scope, init_params=False)
 AddLeNetModel(deploy_model, "data")
 
@@ -258,7 +258,7 @@ with open(init_net_out, 'wb') as f:
 with open(predict_net_out, 'wb') as f:
     f.write(predict_net.SerializeToString())
 
-print "Done, exiting..."
+#print "Done, exiting..."
 
 
 # After execution is done lets plot the values
@@ -268,6 +268,3 @@ pyplot.legend(loc='upper right')
 pyplot.title("Accuracy and Loss over training run")
 pyplot.xlabel("iteration")
 pyplot.show()
-
-
-
