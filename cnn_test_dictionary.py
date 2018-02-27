@@ -9,7 +9,7 @@
 ##################################################################################
 
 # import dependencies
-print "Import Dependencies..."
+print ("Import Dependencies...")
 from matplotlib import pyplot
 import numpy as np 
 import os
@@ -45,7 +45,7 @@ def prepare_image(img_path):
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
     #img = rescale(img, 227, 227)
-    #img = crop_center(img, 90, 90)
+    img = crop_center(img, 90, 90)
 
     # Create horizontal flip
     img2 = np.copy(img)
@@ -78,9 +78,9 @@ def prepare_image(img_path):
 
 ##################################################################################
 # Bring up the network from the .pb files
-with open(init_net) as f:
+with open(init_net,"rb") as f:
     init_net = f.read()
-with open(predict_net) as f:
+with open(predict_net,"rb") as f:
     predict_net = f.read()
 
 p = workspace.Predictor(init_net, predict_net)
@@ -89,7 +89,7 @@ p = workspace.Predictor(init_net, predict_net)
 ##################################################################################
 # Loop through the test dictionary and run the inferences
 
-test_dict = open(test_dictionary,"rb")
+test_dict = open(test_dictionary,"r")
 
 num_correct = 0
 total = 0
@@ -121,8 +121,8 @@ for line in test_dict:
     #print avg_results
     #exit()
     
-    print "Image: ",img
-    print "Label: ", label
+    print ("Image: ",img)
+    print ("Label: ", label)
     #print "results: ",results
 
     # turn it into something we can play with and examine which is in a multi-dimensional array
@@ -134,15 +134,15 @@ for line in test_dict:
 
     max_index, max_value = max(enumerate(avg_results), key=operator.itemgetter(1))
 
-    print "Prediction: ", max_index
-    print "Confidence: ", max_value
+    print ("Prediction: ", max_index)
+    print ("Confidence: ", max_value)
 
     if max_index == label:
         num_correct += 1
 
     total += 1
     
-print "\n**************************************"
-print "Accuracy = {}".format(num_correct/float(total))
+print ("\n**************************************")
+print ("Accuracy = {}".format(num_correct/float(total)))
 
 

@@ -16,7 +16,7 @@
 ##################################################################################
 
 # import dependencies
-print "Import Dependencies..."
+#print "Import Dependencies..."
 from matplotlib import pyplot
 import numpy as np 
 import os
@@ -36,7 +36,7 @@ train_dictionary = "../dataset/train_dictionary.txt"
 predict_net_out = "cnn_predict_net.pb"
 init_net_out = "cnn_init_net.pb"
 batch_size = 50
-num_epochs = 35 # Number of times training will cycle through the entire train set
+num_epochs = 40 # Number of times training will cycle through the entire train set
 
 
 ##################################################################################
@@ -55,7 +55,7 @@ def prepare_image(img_path):
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
     #img = rescale(img, 227, 227)
-    #img = crop_center(img, 90, 90)
+    img = crop_center(img, 90, 90)
 
     # Create horizontal flip
     img2 = np.copy(img)
@@ -167,7 +167,7 @@ def AddLeNetModel(model, data):
 
     # Size = 50x22x22
     #fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*19*19, dim_out=500)
-    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*9*9, dim_out=500)
+    fc4 = brew.fc(model, relu3, 'fc4', dim_in=50*7*7, dim_out=500)
     relu4 = brew.relu(model, fc4, 'relu4')
 
     #drop4 = brew.dropout(model,relu4,'drop4',ratio=0.2,is_test=0)
@@ -236,7 +236,7 @@ for epoch in range(num_epochs):
         curr_loss = workspace.FetchBlob('loss')
         accuracy.append(curr_acc)
         loss.append(curr_loss)
-        print "[{}][{}/{}] loss={}, accuracy={}".format(epoch, index, int(len(train_dataset) / batch_size),curr_loss, curr_acc)
+        print ("[{}][{}/{}] loss={}, accuracy={}".format(epoch, index, int(len(train_dataset) / batch_size),curr_loss, curr_acc))
 
 ##################################################################################
 #### Save the trained model for testing later
@@ -244,7 +244,7 @@ for epoch in range(num_epochs):
 # save as two protobuf files (predict_net.pb and init_net.pb)
 # predict_net.pb defines the architecture of the network
 # init_net.pb defines the network params/weights
-print "Saving the trained model to predict/init.pb files"
+#print "Saving the trained model to predict/init.pb files"
 deploy_model = model_helper.ModelHelper(name="cifar10_deploy", arg_scope=arg_scope, init_params=False)
 AddLeNetModel(deploy_model, "data")
 
@@ -258,7 +258,7 @@ with open(init_net_out, 'wb') as f:
 with open(predict_net_out, 'wb') as f:
     f.write(predict_net.SerializeToString())
 
-print "Done, exiting..."
+#print "Done, exiting..."
 
 
 # After execution is done lets plot the values

@@ -25,10 +25,10 @@ random.shuffle(lines)
 num_lines = len(lines)
 num_train = int(num_lines*percent_train)
 
-print "total lines read in: ", len(lines)
-print "num train: ",len(lines[:num_train])
-print "num test: ",len(lines[num_train:])
-print "total lines written: ", (len(lines[:num_train])+len(lines[num_train:]))
+#print "total lines read in: ", len(lines)
+#print "num train: ",len(lines[:num_train])
+#print "num test: ",len(lines[num_train:])
+#print "total lines written: ", (len(lines[:num_train])+len(lines[num_train:]))
 
 # write the two separate files
 open(output_train_dict, 'w').writelines(lines[:num_train])

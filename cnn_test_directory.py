@@ -7,7 +7,7 @@
 # The only changes we should have to make to this file is the name of the model pb's
 
 # import dependencies
-print "Import Dependencies..."
+print ("Import Dependencies...")
 from matplotlib import pyplot
 import numpy as np 
 import os
@@ -47,7 +47,7 @@ def prepare_image(img_path):
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
     #img = rescale(img, 227, 227)
-    #img = crop_center(img, 90, 90)
+    img = crop_center(img, 90, 90)
 
     # Create horizontal flip
     img2 = np.copy(img)
@@ -85,9 +85,9 @@ def prepare_image(img_path):
 
 ##################################################################################
 # Bring up the network from the .pb files
-with open(init_net) as f:
+with open(init_net,"rb") as f:
     init_net = f.read()
-with open(predict_net) as f:
+with open(predict_net,"rb") as f:
     predict_net = f.read()
 
 p = workspace.Predictor(init_net, predict_net)
@@ -104,7 +104,7 @@ f.write("id,score\n")
 
 for img in glob.glob(test_data_dir + "/*"):
     
-    print "Testing: ",img
+    print ("Testing: ",img)
     img_id = os.path.basename(img).split(".")[0]
 
     # Format the image to feed into the net
@@ -122,8 +122,8 @@ for img in glob.glob(test_data_dir + "/*"):
 
     max_index, max_value = max(enumerate(avg_results), key=operator.itemgetter(1))
 
-    print "Prediction: ", max_index
-    print "Confidence: ", max_value
+    print ("Prediction: ", max_index)
+    print ("Confidence: ", max_value)
     
     f.write(img_id + "," + str(max_index) + "\n")
 
