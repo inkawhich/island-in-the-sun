@@ -23,7 +23,7 @@ output_dict = os.path.abspath("../../dataset/test_dictionary.txt")
 # There is an imbalance in the number of 1's and 0's
 # Set this to one if you want to balance the number
 #   Note: If you set this you will be ignoring some samples
-equalize = 0
+equalize = 1
 ###############################################################
 
 

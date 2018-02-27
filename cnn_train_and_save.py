@@ -36,7 +36,7 @@ train_dictionary = "../dataset/train_dictionary.txt"
 predict_net_out = "cnn_predict_net.pb"
 init_net_out = "cnn_init_net.pb"
 batch_size = 50
-num_epochs = 35 # Number of times training will cycle through the entire train set
+num_epochs = 10 # Number of times training will cycle through the entire train set
 
 
 ##################################################################################
