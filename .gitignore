@@ -1,3 +1,4 @@
 *.pb
 *.csv
+*.txt
 .DS_Store

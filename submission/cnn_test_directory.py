@@ -1,15 +1,14 @@
 ##################################################################################
 # NAI
 #
-# This script is what we will use for testing our trained model based on a labeled
-#   test dictionary. This does not format a csv for submission but can be used to
-#   quickly see how the model we just trained does on our test set. Note, the test
-#   dictionary is labeled, so this will output a % ACCURACY
+# This script will be use to generate the submission files. It takes the model pb's and 
+#  the name of the testing directory as input and outputs a csv file in the format for 
+#   submission
 #
+# The only changes we should have to make to this file is the name of the model pb's
 ##################################################################################
 
-# import dependencies
-print ("Import Dependencies...")
+from __future__ import print_function
 from matplotlib import pyplot
 import numpy as np 
 import os
@@ -22,18 +21,24 @@ from caffe2.python.predictor import mobile_exporter
 import random
 import skimage.io
 from skimage.color import rgb2gray
+import glob
+
 
 ##################################################################################
 # Gather Inputs
-test_dictionary = "../dataset/test_dictionary.txt"
-predict_net = "./submission/cnn_predict_net.pb"
-init_net = "./submission/cnn_init_net.pb"
 
+# Directory of test images
+test_data_dir = os.path.abspath("../../dataset/testing")
+
+# Saved model created with train and save
+predict_net = "cnn_predict_net.pb"
+init_net = "cnn_init_net.pb"
+
+# Name of csv file we will create for submission
+test_csv = "t3_submission.csv"
 
 ##################################################################################
 # Image formatting functions
-# We do not need all of the augmentation like we do in training but we may want
-#   to play with the data before feeding it to classifier
 def crop_center(img, cropx, cropy):
     y, x, c = img.shape
     startx = x // 2 - (cropx // 2)
@@ -44,7 +49,6 @@ def prepare_image(img_path):
     
     img = skimage.io.imread(img_path)
     img = skimage.img_as_float(img)
-    #img = rescale(img, 227, 227)
     img = crop_center(img, 90, 90)
 
     # Create horizontal flip
@@ -62,7 +66,7 @@ def prepare_image(img_path):
     #pyplot.imshow(img)
     #pyplot.show()
 
-    # Create horizontal flip
+    # hflip
     img2 = img2.swapaxes(1, 2).swapaxes(0, 1)    # HWC to CHW dimension
     img2 = img2[(2, 1, 0), :, :]                 # RGB to BGR color order
     img2 = img2 * 255 - 128                      # Subtract mean = 128
@@ -75,6 +79,7 @@ def prepare_image(img_path):
     img3 /= 255.
 
     return img.astype(np.float32),img2.astype(np.float32),img3.astype(np.float32)
+    
 
 ##################################################################################
 # Bring up the network from the .pb files
@@ -83,26 +88,23 @@ with open(init_net,"rb") as f:
 with open(predict_net,"rb") as f:
     predict_net = f.read()
 
+# Initialize the predictor object which we will use for inference
 p = workspace.Predictor(init_net, predict_net)
 
 
 ##################################################################################
-# Loop through the test dictionary and run the inferences
+# Loop through the test directory and classify all images
 
-test_dict = open(test_dictionary,"r")
+f = open(test_csv,"w")
+f.write("id,score\n")
 
-num_correct = 0
-total = 0
+# For all of the .tif images in the data directory
+for img in glob.glob(test_data_dir + "/*.tif"):
+    
+    print ("Testing: ",img)
+    img_id = os.path.basename(img).split(".")[0]
 
-
-# For each line in the test dictionary file
-for line in test_dict:
-    # Split the line into its image and label components
-    split_line = line.split()
-    img = split_line[0]
-    label = int(split_line[1].rstrip())
-
-    # Format the image to feed into the net
+    # Format the image to feed into the net along with its hflip and rot90
     sample,sample1,sample2 = prepare_image(img)
     sample = sample[np.newaxis, :, :, :].astype(np.float32)
     sample1 = sample1[np.newaxis, :, :, :].astype(np.float32)
@@ -113,36 +115,17 @@ for line in test_dict:
     results1 = np.asarray(p.run([sample1]))
     results2 = np.asarray(p.run([sample2]))
 
-    #print results[0,0,:]
-    #print results1[0,0,:]
-    #print results2[0,0,:]
-
+    # Average the softmax results from each of the augmented views of the image
     avg_results = (results[0,0,:] + results1[0,0,:] + results2[0,0,:])/3.
-    #print avg_results
-    #exit()
-    
-    print ("Image: ",img)
-    print ("Label: ", label)
-    #print "results: ",results
 
-    # turn it into something we can play with and examine which is in a multi-dimensional array
-    #results = np.asarray(results)
-    #print "results shape: ", results.shape
-
-    #results = results[0,0,:]
-    #print "results shape: ", results.shape
-
+    # Pick out the highest value which we will use as our prediction
     max_index, max_value = max(enumerate(avg_results), key=operator.itemgetter(1))
 
     print ("Prediction: ", max_index)
     print ("Confidence: ", max_value)
-
-    if max_index == label:
-        num_correct += 1
-
-    total += 1
     
-print ("\n**************************************")
-print ("Accuracy = {}".format(num_correct/float(total)))
+    # Write the output prediction for this image to the csv file
+    f.write(img_id + "," + str(max_index) + "\n")
 
+    
 
