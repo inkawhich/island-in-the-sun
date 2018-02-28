@@ -8,6 +8,12 @@
 - Lisa Sapozhnikov
 - Yifan Li
 
+## Prerequisites
+
+In this project we use the Caffe2 framework to train our CNN. The conda install (https://caffe2.ai/docs/getting-started.html?platform=mac&configuration=prebuilt) for Caffe2 is very simple and is by far the fastest way to install. After you install Caffe2 make sure to set your PYTHONPATH properly then you should be able to run this code.
+
+Also, we do not provide a copy of the data, so before starting make sure you have the data from Kaggle downloaded and know the paths to *labels_training.csv* and the *training* and *testing* directories.
+
 ## How to use this code...
 
 1. Edit the inputs section of the *create_dictionary_file.py* script to point to your *labels_training.csv* and *training* data directory that you downloaded from Kaggle
