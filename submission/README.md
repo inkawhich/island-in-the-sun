@@ -1,6 +1,6 @@
- #Team 3 
+# Team 3 
 
- ##island-in-the-sun competition submission
+## island-in-the-sun competition submission
 
 **Team 3 Members**
 
